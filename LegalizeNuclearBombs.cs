@@ -1,4 +1,5 @@
-﻿using BepInEx;
+﻿using System;
+using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
 using HarmonyLib;
@@ -15,35 +16,48 @@ namespace LegalizeNuclearBombs
         // internal Harmony? Harmony { get; set; }
         
         #pragma warning disable CS8618
-        
+
+        public static ConfigEntry<int> ConfigHitSensitivity;
         public static ConfigEntry<int> ConfigMaxHitCount;
         public static ConfigEntry<float> ConfigExplosionStrength;
         public static ConfigEntry<int> ConfigPlayerDamage;
         public static ConfigEntry<int> ConfigEnemyDamage;
         public static ConfigEntry<float> ConfigShakeMultiplier;
+
+        public static ConfigEntry<bool> ConfigPlayWarningSound;
+        public static ConfigEntry<float> ConfigWarningVolume;
         
         private static ConfigEntry<bool> _configEnableDebugLogging;
-        
-        #pragma warning restore CS8618
         
         private void Awake()
         {
             // Config setup
+            // 1 - Nuke
+            ConfigHitSensitivity = Config.Bind("1 - Nuke", "HitSensitivity", 1,
+                new ConfigDescription("How sensitive the nuke is to impacts. The higher the value, the higher the sensitivity.",
+                    new AcceptableValueRange<int>(0, 2)));
             ConfigMaxHitCount = Config.Bind("1 - Nuke", "MaxHitCount", 3,
                 new ConfigDescription("The number of heavy hits the nuke can take until it explodes.",
                     new AcceptableValueRange<int>(0, 10)));
-            ConfigExplosionStrength = Config.Bind("1 - Nuke", "ExplosionStrength", 10f,
+            ConfigExplosionStrength = Config.Bind("1 - Nuke", "ExplosionStrength", 15f,
                 new ConfigDescription("The strength of the explosion.",
-                    new AcceptableValueRange<float>(0f, 100f)));
+                    new AcceptableValueRange<float>(0f, 25)));
             ConfigPlayerDamage = Config.Bind("1 - Nuke", "PlayerDamage", 200,
                 new ConfigDescription("The amount of damage dealt to players.",
                     new AcceptableValueRange<int>(0, 1000)));
-            ConfigEnemyDamage = Config.Bind("1 - Nuke", "EnemyDamage", 500,
+            ConfigEnemyDamage = Config.Bind("1 - Nuke", "EnemyDamage", 400,
                 new ConfigDescription("The amount of damage dealt to enemies.",
                     new AcceptableValueRange<int>(0, 1000)));
             ConfigShakeMultiplier = Config.Bind("1 - Nuke", "ShakeMultiplier", 3f,
                 new ConfigDescription("The intensity of the camera shake.",
                     new AcceptableValueRange<float>(0f, 10f)));
+            
+            // 2 - Sounds
+            ConfigPlayWarningSound = Config.Bind("2 - Sounds", "PlayWarningSound", true,
+                new ConfigDescription("Whether to play a fizzing sound as a warning when the nuke has only one hit remaining."));
+            ConfigWarningVolume = Config.Bind("2 - Sounds", "WarningVolume", 0.2f,
+                new ConfigDescription("The volume of the warning sound.",
+                    new AcceptableValueRange<float>(0f, 1f)));
             
             // Debug
             _configEnableDebugLogging = Config.Bind("Debug", "EnableDebugLogging", false,

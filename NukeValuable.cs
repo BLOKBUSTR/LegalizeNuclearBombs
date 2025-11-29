@@ -35,22 +35,40 @@ namespace LegalizeNuclearBombs
                 );
         }
         
-        public void PotentialExplode()
+        public void PotentialExplodeLight() // Triggers if ConfigHitSensitivity is 2
         {
             if (!isLocal) return;
-            if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value)
+            if (LegalizeNuclearBombs.ConfigHitSensitivity.Value > 1) PotentialExplodeHeavy();
+        }
+
+        public void PotentialExplodeMedium() // Triggers if ConfigHitSensitivity is 1
+        {
+            if (!isLocal) return;
+            if (LegalizeNuclearBombs.ConfigHitSensitivity.Value > 0) PotentialExplodeHeavy();
+        }
+
+        public void PotentialExplodeHeavy() // Always triggers
+        {
+            if (!isLocal) return;
+            if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 1)
             {
                 Explode();
             }
             else
             {
+                LegalizeNuclearBombs.Debug($"_hitCount: {_hitCount++}");
                 // Play warning sound if almost about to go kaboom
-                if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 1)
+                if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 2
+                    && LegalizeNuclearBombs.ConfigPlayWarningSound.Value)
                 {
+                    warningSound.Volume = LegalizeNuclearBombs.ConfigWarningVolume.Value;
                     warningSound.Play(center.position);
+                    LegalizeNuclearBombs.Debug("Played audio warning; one hit left");
                 }
                 _hitCount++;
             }
         }
     }
 }
+
+// I heard that snare took him two years to make.
