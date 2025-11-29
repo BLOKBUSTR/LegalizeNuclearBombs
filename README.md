@@ -6,8 +6,7 @@ Adds a custom-modeled nuclear warhead as a Tall valuable, even bigger than befor
 [image]
 
 ## 🔧 Configuration
-
-Config options will automatically apply if changed in-game, especially if using REPOConfig.
+This mod is highly configurable! Config options will automatically apply if changed in-game, especially if using REPOConfig.
 
 <details>
     <summary>Click to expand config list:</summary>
@@ -28,8 +27,8 @@ Config options will automatically apply if changed in-game, especially if using 
 </details>
 
 ## ❤️ Acknowledgements
-- Zehs for creating and maintaining [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib/)
-- TitanVortex for the original [BigNuke](https://thunderstore.io/c/repo/p/TitanVortex/BigNuke/) mod which was one of my favorites, and of which this mod is mostly inspired from
+- Huge thanks to Zehs for creating and maintaining [REPOLib](https://thunderstore.io/c/repo/p/Zehs/REPOLib/);
+- TitanVortex for the original [BigNuke](https://thunderstore.io/c/repo/p/TitanVortex/BigNuke/) mod which was one of my favorites, and of which this mod is mostly inspired from;
 - Skrillex and DJ Smokey for more goofy inspiration 🔥
 
 Please report any issues to the [Discord Thread (pending)](https://discord.com/channels/1344557689979670578/1344699091959156787). Suggestions are also welcome!

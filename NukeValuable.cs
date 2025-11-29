@@ -33,6 +33,7 @@ namespace LegalizeNuclearBombs
                 false,
                 LegalizeNuclearBombs.ConfigShakeMultiplier.Value
                 );
+            LegalizeNuclearBombs.Debug("KABOOM");
         }
         
         public void PotentialExplodeLight() // Triggers if ConfigHitSensitivity is 2
@@ -56,7 +57,7 @@ namespace LegalizeNuclearBombs
             }
             else
             {
-                LegalizeNuclearBombs.Debug($"_hitCount: {_hitCount++}");
+                LegalizeNuclearBombs.Debug($"_hitCount: {_hitCount + 1}");
                 // Play warning sound if almost about to go kaboom
                 if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 2
                     && LegalizeNuclearBombs.ConfigPlayWarningSound.Value)
