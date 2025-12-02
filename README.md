@@ -13,7 +13,7 @@ This mod is highly configurable! Config options will automatically apply if chan
 
 - Nuke
   - **HitSensitivity**: How sensitive the nuke is to impacts. The higher the value, the higher the sensitivity.
-  - **MaxHitCount**: The number of heavy hits the nuke can take until it explodes.
+  - **MaxHitCount**: The number of hits the nuke can take until it explodes. Set to 0 to disable and make it explode only when completely broken.
   - **ExplosionStrength**: The strength of the explosion.
   - **PlayerDamage**: The amount of damage dealt to players.
   - **EnemyDamage**: The amount of damage dealt to enemies.

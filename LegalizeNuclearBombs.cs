@@ -37,7 +37,7 @@ namespace LegalizeNuclearBombs
                 new ConfigDescription("How sensitive the nuke is to impacts. The higher the value, the higher the sensitivity.",
                     new AcceptableValueRange<int>(0, 2)));
             ConfigMaxHitCount = Config.Bind("1 - Nuke", "MaxHitCount", 3,
-                new ConfigDescription("The number of heavy hits the nuke can take until it explodes.",
+                new ConfigDescription("The number of hits the nuke can take until it explodes. Set to 0 to disable and make it explode only when completely broken.",
                     new AcceptableValueRange<int>(0, 10)));
             ConfigExplosionStrength = Config.Bind("1 - Nuke", "ExplosionStrength", 15f,
                 new ConfigDescription("The strength of the explosion.",

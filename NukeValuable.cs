@@ -1,3 +1,4 @@
+using Photon.Pun;
 using UnityEngine;
 
 namespace LegalizeNuclearBombs
@@ -41,33 +42,42 @@ namespace LegalizeNuclearBombs
             if (!isLocal) return;
             if (LegalizeNuclearBombs.ConfigHitSensitivity.Value > 1) PotentialExplodeHeavy();
         }
-
+        
         public void PotentialExplodeMedium() // Triggers if ConfigHitSensitivity is 1
         {
             if (!isLocal) return;
             if (LegalizeNuclearBombs.ConfigHitSensitivity.Value > 0) PotentialExplodeHeavy();
         }
-
+        
         public void PotentialExplodeHeavy() // Always triggers
         {
-            if (!isLocal) return;
+            if (!isLocal || LegalizeNuclearBombs.ConfigMaxHitCount.Value <= 0) return;
             if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 1)
             {
                 Explode();
             }
             else
             {
-                LegalizeNuclearBombs.Debug($"_hitCount: {_hitCount + 1}");
                 // Play warning sound if almost about to go kaboom
-                if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 2
-                    && LegalizeNuclearBombs.ConfigPlayWarningSound.Value)
+                if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 2)
                 {
-                    warningSound.Volume = LegalizeNuclearBombs.ConfigWarningVolume.Value;
-                    warningSound.Play(center.position);
-                    LegalizeNuclearBombs.Debug("Played audio warning; one hit left");
+                    if (SemiFunc.IsMultiplayer())
+                        photonView.RPC("PlayWarningRPC", RpcTarget.All);
+                    else
+                        PlayWarningRPC();
                 }
-                _hitCount++;
+                LegalizeNuclearBombs.Debug($"_hitCount: {_hitCount++}");
             }
+        }
+        
+        [PunRPC]
+        public void PlayWarningRPC(PhotonMessageInfo info = default)
+        {
+            warningSound.Volume = LegalizeNuclearBombs.ConfigPlayWarningSound.Value
+                ? LegalizeNuclearBombs.ConfigWarningVolume.Value
+                : 0f;
+            warningSound.Play(center.position);
+            LegalizeNuclearBombs.Debug("Played audio warning; one hit left");
         }
     }
 }
