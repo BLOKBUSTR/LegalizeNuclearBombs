@@ -26,6 +26,7 @@ namespace LegalizeNuclearBombs
 
         public static ConfigEntry<bool> ConfigPlayWarningSound;
         public static ConfigEntry<float> ConfigWarningVolume;
+        // public static ConfigEntry<bool> ConfigShowWarningTextureOverlay;
         
         private static ConfigEntry<bool> _configEnableDebugLogging;
         
@@ -37,7 +38,7 @@ namespace LegalizeNuclearBombs
                 new ConfigDescription("How sensitive the nuke is to impacts. The higher the value, the higher the sensitivity.",
                     new AcceptableValueRange<int>(0, 2)));
             ConfigMaxHitCount = Config.Bind("1 - Nuke", "MaxHitCount", 3,
-                new ConfigDescription("The number of hits the nuke can take until it explodes. Set to 0 to disable and make it explode only when completely broken.",
+                new ConfigDescription("The number of hits the nuke can take until it explodes. Set to 0 to disable and make it explode only when it loses all value.",
                     new AcceptableValueRange<int>(0, 10)));
             ConfigExplosionStrength = Config.Bind("1 - Nuke", "ExplosionStrength", 15f,
                 new ConfigDescription("The strength of the explosion.",
@@ -52,12 +53,14 @@ namespace LegalizeNuclearBombs
                 new ConfigDescription("The intensity of the camera shake.",
                     new AcceptableValueRange<float>(0f, 10f)));
             
-            // 2 - Sounds
-            ConfigPlayWarningSound = Config.Bind("2 - Sounds", "PlayWarningSound", true,
+            // 2 - Break Warning
+            ConfigPlayWarningSound = Config.Bind("2 - Break Warning", "PlayWarningSound", true,
                 new ConfigDescription("Whether to play a fizzing sound as a warning when the nuke has only one hit remaining."));
-            ConfigWarningVolume = Config.Bind("2 - Sounds", "WarningVolume", 0.2f,
+            ConfigWarningVolume = Config.Bind("2 - Break Warning", "WarningVolume", 0.3f,
                 new ConfigDescription("The volume of the warning sound.",
                     new AcceptableValueRange<float>(0f, 1f)));
+            // ConfigShowWarningTextureOverlay = Config.Bind("2 - Break Warning", "ShowWarningTextureOverlay", true,
+            //     new ConfigDescription("Whether to momentarily show a red glowing overlay when the nuke has only one hit remaining."));
             
             // Debug
             _configEnableDebugLogging = Config.Bind("Debug", "EnableDebugLogging", false,

@@ -1,26 +1,49 @@
 using Photon.Pun;
 using UnityEngine;
 
+// TODO: Fix emissive warning texture overlay implementation when I have the time
+
 namespace LegalizeNuclearBombs
 {
     public class NukeValuable : Trap
     {
         #pragma warning disable CS8618
+        
+        public Transform center;
+
+        // public GameObject mesh;
+
+        // private Material _material;
+
+        // private bool _emissionActive;
+
+        // private float _emissionTime;
+        
         private ParticleScriptExplosion _particleScriptExplosion;
         
         private int _hitCount;
         
         public Sound warningSound;
         
-        public Transform center;
-        
         public override void Start()
         {
             base.Start();
             _particleScriptExplosion = GetComponent<ParticleScriptExplosion>();
+            // _material = mesh.GetComponent<Renderer>().material;
             
             LegalizeNuclearBombs.Debug($"New nuke valuable spawned ({GetInstanceID()})");
         }
+
+        // public void FixedUpdate()
+        // {
+        //     if (!_emissionActive) return;
+        //     _material.EnableKeyword("_EMISSION");
+        //     _emissionTime += Time.fixedDeltaTime;
+        //     
+        //     if (!(_emissionTime >= 1)) return;
+        //     _material.DisableKeyword("_EMISSION");
+        //     _emissionActive = false;
+        // }
         
         public void Explode()
         {
@@ -34,7 +57,7 @@ namespace LegalizeNuclearBombs
                 false,
                 LegalizeNuclearBombs.ConfigShakeMultiplier.Value
                 );
-            LegalizeNuclearBombs.Debug("KABOOM");
+            LegalizeNuclearBombs.Debug($"KABOOM ({GetInstanceID()})");
         }
         
         public void PotentialExplodeLight() // Triggers if ConfigHitSensitivity is 2
@@ -58,28 +81,37 @@ namespace LegalizeNuclearBombs
             }
             else
             {
+                LegalizeNuclearBombs.Debug($"_hitCount: {_hitCount + 1} ({GetInstanceID()})");
                 // Play warning sound if almost about to go kaboom
                 if (_hitCount >= LegalizeNuclearBombs.ConfigMaxHitCount.Value - 2)
                 {
                     if (SemiFunc.IsMultiplayer())
-                        photonView.RPC("PlayWarningRPC", RpcTarget.All);
+                        photonView.RPC(nameof(PlayWarningRPC), RpcTarget.All);
                     else
                         PlayWarningRPC();
                 }
-                LegalizeNuclearBombs.Debug($"_hitCount: {_hitCount++}");
+                _hitCount++;
             }
         }
         
+        // Configs checks are placed here so clients can have their own individual config preferences
         [PunRPC]
         public void PlayWarningRPC(PhotonMessageInfo info = default)
         {
-            warningSound.Volume = LegalizeNuclearBombs.ConfigPlayWarningSound.Value
-                ? LegalizeNuclearBombs.ConfigWarningVolume.Value
-                : 0f;
-            warningSound.Play(center.position);
-            LegalizeNuclearBombs.Debug("Played audio warning; one hit left");
+            if (LegalizeNuclearBombs.ConfigPlayWarningSound.Value)
+            {
+                warningSound.Volume = LegalizeNuclearBombs.ConfigWarningVolume.Value;
+                warningSound.Play(center.position);
+                LegalizeNuclearBombs.Debug($"Played audio warning; one hit left ({GetInstanceID()})");
+            }
+
+            // if (LegalizeNuclearBombs.ConfigShowWarningTextureOverlay.Value)
+            // {
+            //     _emissionTime = 0f;
+            //     _emissionActive = true;
+            // }
         }
     }
 }
 
-// I heard that snare took him two years to make.
+// "I heard that snare took him two years to make."
