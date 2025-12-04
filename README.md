@@ -3,12 +3,14 @@
 Adds a custom-modeled nuclear warhead as a Tall valuable, even bigger than before! Handle with the utmost caution!! \
 **All clients require this mod.**
 
-[image]
+![Screenshot](https://raw.githubusercontent.com/BLOKBUSTR/LegalizeNuclearBombs/refs/heads/master/Screenshot.jpg)
 
 ## 🚧 Roadmap
 - Continue polishing the model and textures, if necessary
 - Implement an emissive warning texture overlay (I tried, but it didn't work yet)
 - Refine custom sounds
+
+I will be focusing on my submission for the R.E.P.O. Winter Mod Jam, so this is low on my priority list at the moment.
 
 ## 🔧 Configuration
 This mod is highly configurable! Config options will automatically apply if changed in-game, especially if using REPOConfig.
