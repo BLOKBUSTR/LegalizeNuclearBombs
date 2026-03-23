@@ -41,7 +41,6 @@ namespace LegalizeNuclearBombs
         {
             Instance = this;
             
-            // Prevent the plugin from being deleted
             gameObject.transform.parent = null;
             gameObject.hideFlags = HideFlags.HideAndDontSave;
             
