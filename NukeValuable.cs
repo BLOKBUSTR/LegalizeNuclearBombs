@@ -106,6 +106,7 @@ namespace LegalizeNuclearBombs
             
             var volume = LegalizeNuclearBombs.configExplosionDelayVolume.Value;
             if (volume > 0f) explosionDelaySound.Play(center.transform.position, volume);
+            material.SetColor(emissionColor, Color.white);
             
             if (GameplayManager.instance.photosensitivity) return;
             
@@ -151,7 +152,7 @@ namespace LegalizeNuclearBombs
                     explosionDelayActive = true;
                 }
             }
-            if (hitCount >= LegalizeNuclearBombs.configMaxHitCount.Value - 1)
+            else if (hitCount >= LegalizeNuclearBombs.configMaxHitCount.Value - 1)
             {
                 if (SemiFunc.IsMultiplayer()) photonView.RPC(nameof(PlayWarningRPC), RpcTarget.All);
                 else PlayWarningRPC();

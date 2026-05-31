@@ -20,13 +20,14 @@ This mod is highly configurable! Configs can be updated in-game with [REPOConfig
 | &#124;              | ExplosionStrength          |      15f      | The strength of the explosion. |
 | &#124;              | PlayerDamage               |      200      | The amount of damage dealt to players. |
 | &#124;              | EnemyDamage                |      400      | The amount of damage dealt to enemies. |
-| &#124;              | ExplosionUraniumCloud      |     true      | Whether to spawn a uranium cloud upon explosion. |
 | ↳                   | CameraShakeStrength        |      5f       | The intensity of the explosion camera shake. |
 | **Explosion Delay** |
 | &#124;              | ExplosionDelayTime         |      1f       | Time in seconds that the explosion will be delayed after the nuke has taken its last hit. Can be adjusted to match the length of a custom sound added with loaforcsSoundAPI, as long as it's under 10 seconds. Please do not change if using the default sound. |
 | &#124;              | ExplosionDelayVolume       |     0.5f      | The volume of the explosion delay sound. |
 | &#124;              | ExplosionDelayParticles    |     true      | Whether to play particle effects during the explosion delay. |
 | ↳                   | ExplosionDelayCameraGlitch |     true      | Whether to play the camera glitch effect to players holding the nuke when its explosion delay begins. |
+| **Uranium Cloud**   |
+| ↳                   | ExplosionUraniumCloud      |     true      | Whether to spawn a uranium cloud upon explosion. |
 | **Break Warning**   |
 | &#124;              | WarningVolume              |     0.35f     | The volume of the warning sound. Set to 0 to disable. |
 | &#124;              | ShowWarningVisual          |     true      | Whether to momentarily show a red glow on the nuke when the break warning triggers. |
