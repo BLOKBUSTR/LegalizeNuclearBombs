@@ -1,52 +1,70 @@
+using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
 
 #pragma warning disable CS8618
 namespace LegalizeNuclearBombs
 {
-    public class NukeValuable : Trap
+    public class NukeValuable : MonoBehaviour
     {
         public Transform center;
-        
         public GameObject mesh;
-        
         private Material material;
         private static readonly int emissionColor = Shader.PropertyToID("_EmissionColor");
+        private PhysGrabObject physGrabObject;
+        private PhotonView photonView;
         
+        public GameObject uraniumCloudPrefab;
+        
+        public Sound warningSound;
+        public Sound explosionDelaySound;
+        
+        private int hitCount;
         private bool detonated;
+        
+        public List<ParticleSystem> explosionParticles;
+        private bool explosionDelayActive;
+        private bool explosionDelayImpulse = true;
+        private float explosionDelayTime;
         
         private bool emissionActive;
         private bool emissionImpulse;
-        
         private float emissionTime;
         
-        private ParticleScriptExplosion particleScriptExplosion;
-        
-        private int hitCount;
-        
-        public Sound warningSound;
-        
-        public override void Start()
+        private void Start()
         {
-            base.Start();
-            particleScriptExplosion = GetComponent<ParticleScriptExplosion>();
-            material = mesh.GetComponent<Renderer>().material;
+            material = mesh.GetComponent<MeshRenderer>().material;
+            physGrabObject = GetComponent<PhysGrabObject>();
+            photonView = GetComponent<PhotonView>();
+            LegalizeNuclearBombs.Debug("New nuke valuable spawned", this);
             
-            LegalizeNuclearBombs.Debug($"New nuke valuable spawned | {gameObject}", this);
+            // if (LegalizeNuclearBombs.configEnableDebug.Value)
+            //     foreach (AudioClip a in explosionDelaySound.Sounds)
+            //         LegalizeNuclearBombs.Logger.LogDebug(this + ": " + a.name + " | " + a.length);
         }
         
-        public override void Update()
+        private void Update()
         {
-            // Debug
-            // if (Input.GetKeyDown(KeyCode.N))
-            // {
-            //     PlayWarningRPC();
-            // }
-            
-            if (!emissionActive) return;
+            EmissionLogic();
+            if (SemiFunc.IsNotMasterClient()) return;
+            if (explosionDelayActive) ExplosionDelayLogic();
+        }
+        
+        private void EmissionLogic()
+        {
+            if (!emissionActive)
+            {
+                emissionImpulse = true;
+                return;
+            }
             if (emissionImpulse)
             {
-                GameDirector.instance.CameraImpact.ShakeDistance(LegalizeNuclearBombs.configWarningCameraShakeStrength.Value, 1f, 6f, transform.position, .25f);
+                GameDirector.instance.CameraImpact.ShakeDistance(
+                    LegalizeNuclearBombs.configWarningCameraShakeStrength.Value,
+                    1f,
+                    6f,
+                    transform.position,
+                    .25f);
                 emissionImpulse = false;
             }
             LegalizeNuclearBombs.Debug($"emissionColor: {material.GetColor(emissionColor).r}");
@@ -55,80 +73,99 @@ namespace LegalizeNuclearBombs
                 Mathf.Clamp(emissionTime, 0f, 1f),
                 .35f)
             );
-            if (emissionTime > 0f)
+            if (material.GetColor(emissionColor).r > .01f)
             {
-                emissionTime -= Time.deltaTime;
+                if (emissionTime > 0f) emissionTime -= Time.deltaTime;
                 return;
             }
-            if (material.GetColor(emissionColor).r > .01f) return;
+            
             material.SetColor(emissionColor, Color.black);
             emissionActive = false;
         }
         
-        public void Explode()
+        private void ExplosionDelayLogic()
         {
-            if (detonated) return;
-            particleScriptExplosion.Spawn(
-                center.position,
-                LegalizeNuclearBombs.configExplosionStrength.Value,
-                LegalizeNuclearBombs.configPlayerDamage.Value,
-                LegalizeNuclearBombs.configEnemyDamage.Value,
-                LegalizeNuclearBombs.configExplosionStrength.Value,
-                false,
-                false,
-                LegalizeNuclearBombs.configCameraShakeStrength.Value
-                );
-            LegalizeNuclearBombs.Debug("KABOOM", this);
-            detonated = true;
-            Destroy(gameObject); // Prevent spamming the explosion, especially at smaller strength
+            explosionDelayTime -= Time.deltaTime;
+            if (explosionDelayTime <= 0f)
+            {
+                SetExplode();
+                return;
+            }
+            if (explosionDelayImpulse)
+            {
+                if (SemiFunc.IsMultiplayer()) photonView.RPC(nameof(ExplosionDelayRPC), RpcTarget.All);
+                else ExplosionDelayRPC();
+                explosionDelayImpulse = false;
+            }
         }
         
-        #region UnityEvents
+        [PunRPC]
+        private void ExplosionDelayRPC(PhotonMessageInfo info = default)
+        {
+            if (!SemiFunc.MasterOnlyRPC(info)) return;
+            
+            var volume = LegalizeNuclearBombs.configExplosionDelayVolume.Value;
+            if (volume > 0f) explosionDelaySound.Play(center.transform.position, volume);
+            
+            if (GameplayManager.instance.photosensitivity) return;
+            
+            if (LegalizeNuclearBombs.configExplosionDelayCameraGlitch.Value && physGrabObject.grabbedLocal)
+            {
+                CameraGlitch.Instance.PlayLong();
+            }
+            foreach (ParticleSystem p in explosionParticles)
+            {
+                p.Play();
+            }
+        }
         
+        // PhysGrabObjectImpactDetector.onBreakLight
         public void PotentialExplodeLight()
         {
-            if (!isLocal) return;
+            if (SemiFunc.IsNotMasterClient()) return;
             if (LegalizeNuclearBombs.configHitSensitivity.Value is LegalizeNuclearBombs.HitSensitivity.Light)
                 PotentialExplodeHeavy();
         }
         
+        // PhysGrabObjectImpactDetector.onBreakMedium
         public void PotentialExplodeMedium()
         {
-            if (!isLocal) return;
+            if (SemiFunc.IsNotMasterClient()) return;
             if (LegalizeNuclearBombs.configHitSensitivity.Value is not LegalizeNuclearBombs.HitSensitivity.Heavy)
                 PotentialExplodeHeavy();
         }
         
+        // PhysGrabObjectImpactDetector.onBreakHeavy
         public void PotentialExplodeHeavy()
         {
-            if (!isLocal || LegalizeNuclearBombs.configMaxHitCount.Value <= 0) return;
+            if (SemiFunc.IsNotMasterClient() || LegalizeNuclearBombs.configMaxHitCount.Value <= 0) return;
+            hitCount++;
+            if (hitCount >= LegalizeNuclearBombs.configMaxHitCount.Value)
+            {
+                if (explosionDelayActive) return;
+                
+                if (LegalizeNuclearBombs.configExplosionDelayTime.Value <= 0f) SetExplode();
+                else
+                {
+                    explosionDelayTime = LegalizeNuclearBombs.configExplosionDelayTime.Value;
+                    explosionDelayActive = true;
+                }
+            }
             if (hitCount >= LegalizeNuclearBombs.configMaxHitCount.Value - 1)
             {
-                Explode();
+                if (SemiFunc.IsMultiplayer()) photonView.RPC(nameof(PlayWarningRPC), RpcTarget.All);
+                else PlayWarningRPC();
             }
-            else
-            {
-                LegalizeNuclearBombs.Debug($"_hitCount: {hitCount + 1}", this);
-                // Play warning sound if almost about to go kaboom
-                if (hitCount >= LegalizeNuclearBombs.configMaxHitCount.Value - 2)
-                {
-                    if (SemiFunc.IsMultiplayer()) photonView.RPC(nameof(PlayWarningRPC), RpcTarget.All);
-                    else PlayWarningRPC();
-                }
-                hitCount++;
-            }
+            LegalizeNuclearBombs.Debug("hitCount: " + hitCount, this);
         }
         
-        #endregion
-        
         [PunRPC]
-        public void PlayWarningRPC(PhotonMessageInfo info = default)
+        private void PlayWarningRPC(PhotonMessageInfo info = default)
         {
-            if (LegalizeNuclearBombs.configPlayWarningSound.Value)
-            {
-                warningSound.Volume = LegalizeNuclearBombs.configWarningVolume.Value;
-                warningSound.Play(center.position);
-            }
+            if (!SemiFunc.MasterOnlyRPC(info)) return;
+            
+            var volume = LegalizeNuclearBombs.configWarningVolume.Value;
+            if (volume > 0f) warningSound.Play(center.position, volume);
             
             if (LegalizeNuclearBombs.configShowWarningVisual.Value)
             {
@@ -137,6 +174,55 @@ namespace LegalizeNuclearBombs
                 emissionActive = true;
             }
             LegalizeNuclearBombs.Debug("Played warning, one hit left", this);
+        }
+        
+        // PhysGrabObjectImpactDetector.onDestroy
+        public void SetExplode()
+        {
+            if (SemiFunc.IsNotMasterClient()) return;
+            
+            var explosionStrength = LegalizeNuclearBombs.configExplosionStrength.Value;
+            var playerDamage = LegalizeNuclearBombs.configPlayerDamage.Value;
+            
+            if (SemiFunc.IsMultiplayer())
+                photonView.RPC(nameof(SetExplodeRPC), RpcTarget.Others, explosionStrength, playerDamage);
+            
+            Explode(explosionStrength, playerDamage);
+        }
+        
+        [PunRPC]
+        private void SetExplodeRPC(float explosionStrength, int playerDamage, PhotonMessageInfo info = default)
+        {
+            if (!SemiFunc.MasterOnlyRPC(info)) return;
+            
+            Explode(explosionStrength, playerDamage);
+        }
+        
+        // ReSharper disable Unity.PerformanceAnalysis
+        public void Explode(float explosionStrength, int playerDamage)
+        {
+            if (detonated) return;
+            detonated = true;
+            
+            GetComponent<ParticleScriptExplosion>().Spawn(
+                center.position,
+                explosionStrength,
+                playerDamage,
+                LegalizeNuclearBombs.configEnemyDamage.Value,
+                LegalizeNuclearBombs.configExplosionStrength.Value,
+                false,
+                false,
+                LegalizeNuclearBombs.configCameraShakeStrength.Value
+                );
+            
+            Instantiate(uraniumCloudPrefab, center.transform.position, Quaternion.identity).GetComponent<UraniumScript>();
+            
+            if ((bool)physGrabObject) physGrabObject.impactDetector.DestroyObject();
+            // explosionDelaySound.Stop();
+            
+            LegalizeNuclearBombs.Debug(
+                $"Explode (explosionStrength: {explosionStrength}, playerDamage = {playerDamage})",
+                this);
         }
     }
 }

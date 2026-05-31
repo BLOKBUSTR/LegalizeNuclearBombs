@@ -1,5 +1,19 @@
 # Changelog
 
+### 3.0.0
+
+- Updated for R.E.P.O. 0.4.4+.
+- Added a configurable delay before the explosion, after the nuke has taken its last hit.
+  - The buildup sound can be replaced with anything of your choosing with loaforcsSoundAPI, as long as it's under 10 seconds. Adjust `ExplosionDelayTime` to fit your custom sound.
+  - Also includes particle visuals adopted from the cosmetic boxes, which do not play if Photosensitivity is enabled.
+  - Added config options `ExplosionDelayTime`, `ExplosionDelayVolume`, `ExplosionDelayParticles`, and `ExplosionDelayCameraGlitch`.
+- Added a uranium cloud that spawns upon explosion. Added a config entry `ExplosionUraniumCloud` to enable/disable it. I want to experiment with more customization for this in the future.
+- Fixed a few networking issues:
+  - Oversight where explosion strength and player damage were not synced; now added proper networking.
+  - The nuke did not destroy itself properly on clients upon explosion.
+- Reorganized and optimized some logic.
+- Removed config `PlayWarningSound`, since `WarningVolume` can already be used to silence the sound.
+
 ### 2.0.0
 
 - Upgraded BepInEx dependency.
