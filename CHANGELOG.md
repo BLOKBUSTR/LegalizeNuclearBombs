@@ -1,5 +1,10 @@
 # Changelog
 
+### 3.0.1
+
+- Fixed oversight where config `ExplosionUraniumCloud` was unused. The uranium cloud should now spawn if the host has the setting enabled.
+- Upgraded REPOLib version.
+
 ### 3.0.0
 
 - Updated for R.E.P.O. 0.4.4+.

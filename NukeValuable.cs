@@ -184,23 +184,24 @@ namespace LegalizeNuclearBombs
             
             var explosionStrength = LegalizeNuclearBombs.configExplosionStrength.Value;
             var playerDamage = LegalizeNuclearBombs.configPlayerDamage.Value;
+            var uranium = LegalizeNuclearBombs.configExplosionUraniumCloud.Value;
             
             if (SemiFunc.IsMultiplayer())
-                photonView.RPC(nameof(SetExplodeRPC), RpcTarget.Others, explosionStrength, playerDamage);
+                photonView.RPC(nameof(SetExplodeRPC), RpcTarget.Others, explosionStrength, playerDamage, uranium);
             
-            Explode(explosionStrength, playerDamage);
+            Explode(explosionStrength, playerDamage, uranium);
         }
         
         [PunRPC]
-        private void SetExplodeRPC(float explosionStrength, int playerDamage, PhotonMessageInfo info = default)
+        private void SetExplodeRPC(float explosionStrength, int playerDamage, bool uranium, PhotonMessageInfo info = default)
         {
             if (!SemiFunc.MasterOnlyRPC(info)) return;
             
-            Explode(explosionStrength, playerDamage);
+            Explode(explosionStrength, playerDamage, uranium);
         }
         
         // ReSharper disable Unity.PerformanceAnalysis
-        public void Explode(float explosionStrength, int playerDamage)
+        public void Explode(float explosionStrength, int playerDamage, bool uranium)
         {
             if (detonated) return;
             detonated = true;
@@ -216,13 +217,15 @@ namespace LegalizeNuclearBombs
                 LegalizeNuclearBombs.configCameraShakeStrength.Value
                 );
             
-            Instantiate(uraniumCloudPrefab, center.transform.position, Quaternion.identity).GetComponent<UraniumScript>();
+            if (uranium)
+                Instantiate(uraniumCloudPrefab, center.transform.position, Quaternion.identity)
+                    .GetComponent<UraniumScript>();
             
             if ((bool)physGrabObject) physGrabObject.impactDetector.DestroyObject();
             // explosionDelaySound.Stop();
             
             LegalizeNuclearBombs.Debug(
-                $"Explode (explosionStrength: {explosionStrength}, playerDamage = {playerDamage})",
+                $"Explode (explosionStrength: {explosionStrength}, playerDamage = {playerDamage}, uranium = {uranium})",
                 this);
         }
     }

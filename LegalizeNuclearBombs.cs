@@ -7,7 +7,7 @@ using UnityEngine;
 #pragma warning disable CS8618
 namespace LegalizeNuclearBombs
 {
-    [BepInPlugin("BLOKBUSTR.LegalizeNuclearBombs", "LegalizeNuclearBombs", "3.0.0")]
+    [BepInPlugin("BLOKBUSTR.LegalizeNuclearBombs", "LegalizeNuclearBombs", "3.0.1")]
     [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class LegalizeNuclearBombs : BaseUnityPlugin
     {
@@ -118,14 +118,14 @@ namespace LegalizeNuclearBombs
                 "Whether to enable debug logging.");
         }
         
-        public static void Debug(string message, MonoBehaviour? mono = null)
+        public static void Debug(string message, Object? obj = null)
         {
-            if (configEnableDebug.Value) Logger.LogDebug((bool)mono ? mono + ": " + message : message);
+            if (configEnableDebug.Value) Logger.LogDebug((bool)obj ? obj + ": " + message : message);
         }
         
-        // public static void Error(string message, MonoBehaviour? mono = null)
+        // public static void Error(string message, Object? obj = null)
         // {
-        //     Logger.LogError((bool)mono ? mono + ": " + message : message);
+        //     Logger.LogError((bool)obj ? obj + ": " + message : message);
         // }
     }
 }
