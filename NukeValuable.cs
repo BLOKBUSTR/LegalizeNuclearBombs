@@ -108,7 +108,11 @@ namespace LegalizeNuclearBombs
             if (volume > 0f) explosionDelaySound.Play(center.transform.position, volume);
             material.SetColor(emissionColor, Color.white);
             
-            if (GameplayManager.instance.photosensitivity) return;
+            if (GameplayManager.instance.photosensitivity)
+            {
+                LegalizeNuclearBombs.Debug("Photosensitivity is enabled, skipping explosion delay visual effects.", this);
+                return;
+            }
             
             if (LegalizeNuclearBombs.configExplosionDelayCameraGlitch.Value && physGrabObject.grabbedLocal)
             {
@@ -184,7 +188,7 @@ namespace LegalizeNuclearBombs
             
             var explosionStrength = LegalizeNuclearBombs.configExplosionStrength.Value;
             var playerDamage = LegalizeNuclearBombs.configPlayerDamage.Value;
-            var uranium = LegalizeNuclearBombs.configExplosionUraniumCloud.Value;
+            var uranium = LegalizeNuclearBombs.configSpawnUraniumCloud.Value;
             
             if (SemiFunc.IsMultiplayer())
                 photonView.RPC(nameof(SetExplodeRPC), RpcTarget.Others, explosionStrength, playerDamage, uranium);

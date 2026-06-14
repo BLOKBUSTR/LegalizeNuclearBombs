@@ -1,20 +1,19 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Configuration;
 using BepInEx.Logging;
+using HarmonyLib;
 using UnityEngine;
 
-#pragma warning disable CS8618
+#pragma warning disable CS8618 // Resharper disable InconsistentNaming
 namespace LegalizeNuclearBombs
 {
     [BepInPlugin("BLOKBUSTR.LegalizeNuclearBombs", "LegalizeNuclearBombs", "3.0.1")]
-    [SuppressMessage("ReSharper", "InconsistentNaming")]
     public class LegalizeNuclearBombs : BaseUnityPlugin
     {
         internal static LegalizeNuclearBombs Instance { get; private set; } = null!;
         internal new static ManualLogSource Logger => Instance._logger;
         private ManualLogSource _logger => base.Logger;
-        // internal Harmony? Harmony { get; set; }
+        internal Harmony? Harmony { get; set; }
         
         public enum HitSensitivity
         {
@@ -32,6 +31,7 @@ namespace LegalizeNuclearBombs
         public static ConfigEntry<int> configPlayerDamage;
         public static ConfigEntry<int> configEnemyDamage;
         public static ConfigEntry<float> configCameraShakeStrength;
+        public static ConfigEntry<float> configIndestructibleDroneBatteryDrain;
         
         // Explosion Delay
         public static ConfigEntry<float> configExplosionDelayTime;
@@ -40,7 +40,7 @@ namespace LegalizeNuclearBombs
         public static ConfigEntry<bool> configExplosionDelayCameraGlitch;
         
         // Uranium Cloud
-        public static ConfigEntry<bool> configExplosionUraniumCloud;
+        public static ConfigEntry<bool> configSpawnUraniumCloud;
         
         // Break Warning
         public static ConfigEntry<float> configWarningVolume;
@@ -60,7 +60,7 @@ namespace LegalizeNuclearBombs
             gameObject.hideFlags = HideFlags.HideAndDontSave;
             
             RegisterConfig();
-            // Patch();
+            Patch();
             
             Logger.LogInfo($"{Info.Metadata.GUID} v{Info.Metadata.Version} has loaded!");
             Debug("Debug logging is enabled.");
@@ -86,6 +86,9 @@ namespace LegalizeNuclearBombs
             configCameraShakeStrength = Config.Bind("Nuke", "CameraShakeStrength", 5f,
                 new ConfigDescription("The intensity of the explosion camera shake.",
                     new AcceptableValueRange<float>(0f, 10f)));
+            configIndestructibleDroneBatteryDrain = Config.Bind("Nuke", "IndestructibleDroneBatteryDrain", 2f,
+                new ConfigDescription("The rate at which to accelerate the Indestructible Drone's battery drain when attached to the Nuke.",
+                    new AcceptableValueRange<float>(1f, 5f)));
             
             // Explosion Delay
             configExplosionDelayTime = Config.Bind("Explosion Delay", "ExplosionDelayTime", 1f,
@@ -100,7 +103,7 @@ namespace LegalizeNuclearBombs
                 "Whether to play the camera glitch effect to players holding the nuke when its explosion delay begins.");
             
             // Uranium Cloud
-            configExplosionUraniumCloud = Config.Bind("Uranium Cloud", "ExplosionUraniumCloud", true,
+            configSpawnUraniumCloud = Config.Bind("Uranium Cloud", "SpawnUraniumCloud", true,
                 "Whether to spawn a uranium cloud upon explosion.");
             
             // Break Warning
@@ -115,17 +118,24 @@ namespace LegalizeNuclearBombs
             
             // Debug
             configEnableDebug = Config.Bind("Debug", "EnableDebugLogging", false,
-                "Whether to enable debug logging.");
+                "Whether to enable debug logging. Keep this disabled for normal gameplay.");
+        }
+        
+        private void Patch()
+        {
+            Harmony ??= new Harmony(Info.Metadata.GUID);
+            Harmony.PatchAll();
         }
         
         public static void Debug(string message, Object? obj = null)
         {
-            if (configEnableDebug.Value) Logger.LogDebug((bool)obj ? obj + ": " + message : message);
+            if (configEnableDebug.Value)
+                Logger.LogDebug((bool)obj ? $"{obj} ({obj!.GetInstanceID()}: {message}" : message);
         }
         
         // public static void Error(string message, Object? obj = null)
         // {
-        //     Logger.LogError((bool)obj ? obj + ": " + message : message);
+        //     Logger.LogError((bool)obj ? $"{obj} ({obj!.GetInstanceID()}: {message}" : message);
         // }
     }
 }

@@ -1,5 +1,10 @@
 # Changelog
 
+### 3.1.0
+
+- Added a new config setting `IndestructibleDroneBatteryDrain`, which accelerates the rate at which the Indestructible Drone's battery will drain when attached to the Nuke. The battery drain is twice as fast by default.
+- Renamed config entry `ExplosionUraniumCloud` → `SpawnUraniumCloud`.
+
 ### 3.0.1
 
 - Fixed oversight where config `ExplosionUraniumCloud` was unused. The uranium cloud should now spawn if the host has the setting enabled.
