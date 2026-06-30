@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using Photon.Pun;
 using UnityEngine;
@@ -5,24 +6,33 @@ using UnityEngine;
 #pragma warning disable CS8618
 namespace LegalizeNuclearBombs
 {
-    public class NukeValuable : MonoBehaviour
+    public class ValuableWarhead : MonoBehaviour
     {
         public Transform center;
-        public GameObject mesh;
+        public MeshRenderer mesh;
         private Material material;
         private static readonly int emissionColor = Shader.PropertyToID("_EmissionColor");
-        private PhysGrabObject physGrabObject;
-        private PhotonView photonView;
-        
+        public List<ParticleSystem> explosionParticles;
         public GameObject uraniumCloudPrefab;
+        
+        [Space]
+        public PhysGrabObject physGrabObject;
+        public PhotonView photonView;
         
         public Sound warningSound;
         public Sound explosionDelaySound;
         
+        private float explosionStrength;
+        private int playerDamage;
+        private bool spawnUraniumCloud;
+        private float uraniumCloudSize;
+        private float uraniumCloudDuration;
+        private int uraniumPlayerDamage;
+        private float uraniumPlayerDamageRate;
+        
         private int hitCount;
         private bool detonated;
         
-        public List<ParticleSystem> explosionParticles;
         private bool explosionDelayActive;
         private bool explosionDelayImpulse = true;
         private float explosionDelayTime;
@@ -33,15 +43,64 @@ namespace LegalizeNuclearBombs
         
         private void Start()
         {
-            material = mesh.GetComponent<MeshRenderer>().material;
-            physGrabObject = GetComponent<PhysGrabObject>();
-            photonView = GetComponent<PhotonView>();
+            material = mesh.material;
+            
             LegalizeNuclearBombs.Debug("New nuke valuable spawned", this);
             
-            // if (LegalizeNuclearBombs.configEnableDebug.Value)
-            //     foreach (AudioClip a in explosionDelaySound.Sounds)
-            //         LegalizeNuclearBombs.Logger.LogDebug(this + ": " + a.name + " | " + a.length);
+            if (SemiFunc.IsNotMasterClient()) return;
+            
+            explosionStrength = LegalizeNuclearBombs.configExplosionStrength.Value;
+            playerDamage = LegalizeNuclearBombs.configPlayerDamage.Value;
+            spawnUraniumCloud = LegalizeNuclearBombs.configSpawnUraniumCloud.Value;
+            uraniumCloudSize = LegalizeNuclearBombs.configUraniumCloudSize.Value;
+            uraniumCloudDuration = LegalizeNuclearBombs.configUraniumCloudDuration.Value;
+            uraniumPlayerDamage = LegalizeNuclearBombs.configUraniumPlayerDamage.Value;
+            uraniumPlayerDamageRate = LegalizeNuclearBombs.configUraniumPlayerDamageRate.Value;
+            LogInitValues();
+            
+            if (SemiFunc.IsMultiplayer())
+                StartCoroutine(LateStart());
         }
+        
+        private IEnumerator LateStart()
+        {
+            yield return new WaitForSeconds(5f);
+            
+            while (physGrabObject.impactDetector.indestructibleSpawnTimer > 0f)
+                yield return new WaitForSeconds(.1f);
+            
+            photonView.RPC(nameof(SyncValuesRPC), RpcTarget.Others, explosionStrength, playerDamage, spawnUraniumCloud,
+                uraniumCloudSize, uraniumCloudDuration, uraniumPlayerDamage, uraniumPlayerDamageRate);
+            LegalizeNuclearBombs.Debug("Synced values to clients", this);
+        }
+        
+        [PunRPC]
+        private void SyncValuesRPC(float strength, int damage, bool cloud, float cloudSize, float cloudDuration,
+            int cloudDamage, float cloudDamageRate, PhotonMessageInfo info = default)
+        {
+            if (!SemiFunc.MasterOnlyRPC(info)) return;
+            
+            explosionStrength = strength;
+            playerDamage = damage;
+            spawnUraniumCloud = cloud;
+            uraniumCloudSize = cloudSize;
+            uraniumCloudDuration = cloudDuration;
+            uraniumPlayerDamage = cloudDamage;
+            uraniumPlayerDamageRate = cloudDamageRate;
+            
+            LogInitValues();
+        }
+        
+        private void LogInitValues() => LegalizeNuclearBombs.Logger.LogDebug(
+            "Initialized values:" +
+            $"\nexplosionStrength = {explosionStrength}" +
+            $"\nplayerDamage = {playerDamage}" +
+            $"\nspawnUraniumCloud = {spawnUraniumCloud}" +
+            $"\nuraniumCloudSize = {uraniumCloudSize}" +
+            $"\nuraniumCloudDuration = {uraniumCloudDuration}" +
+            $"\nuraniumPlayerDamage = {uraniumPlayerDamage}" +
+            $"\nuraniumPlayerDamageRate = {uraniumPlayerDamageRate}"
+        );
         
         private void Update()
         {
@@ -67,7 +126,8 @@ namespace LegalizeNuclearBombs
                     .25f);
                 emissionImpulse = false;
             }
-            LegalizeNuclearBombs.Debug($"emissionColor: {material.GetColor(emissionColor).r}");
+            if (LegalizeNuclearBombs.configDebugLogLevel.Value is LegalizeNuclearBombs.LogLevels.Verbose)
+                LegalizeNuclearBombs.Logger.LogDebug($"emissionColor: {material.GetColor(emissionColor).r}");
             material.SetColor(emissionColor, Color.white * Mathf.Lerp(
                 material.GetColor(emissionColor).r,
                 Mathf.Clamp(emissionTime, 0f, 1f),
@@ -110,7 +170,9 @@ namespace LegalizeNuclearBombs
             
             if (GameplayManager.instance.photosensitivity)
             {
-                LegalizeNuclearBombs.Debug("Photosensitivity is enabled, skipping explosion delay visual effects.", this);
+                LegalizeNuclearBombs.Debug(
+                    "Photosensitivity is enabled, skipping explosion delay visual effects.",
+                    this);
                 return;
             }
             
@@ -186,26 +248,23 @@ namespace LegalizeNuclearBombs
         {
             if (SemiFunc.IsNotMasterClient()) return;
             
-            var explosionStrength = LegalizeNuclearBombs.configExplosionStrength.Value;
-            var playerDamage = LegalizeNuclearBombs.configPlayerDamage.Value;
-            var uranium = LegalizeNuclearBombs.configSpawnUraniumCloud.Value;
-            
             if (SemiFunc.IsMultiplayer())
-                photonView.RPC(nameof(SetExplodeRPC), RpcTarget.Others, explosionStrength, playerDamage, uranium);
+                photonView.RPC(nameof(SetExplodeRPC), RpcTarget.Others);
             
-            Explode(explosionStrength, playerDamage, uranium);
+            Explode();
+            // There has to be a better way to do this...
         }
         
         [PunRPC]
-        private void SetExplodeRPC(float explosionStrength, int playerDamage, bool uranium, PhotonMessageInfo info = default)
+        private void SetExplodeRPC(PhotonMessageInfo info = default)
         {
             if (!SemiFunc.MasterOnlyRPC(info)) return;
             
-            Explode(explosionStrength, playerDamage, uranium);
+            Explode();
         }
         
         // ReSharper disable Unity.PerformanceAnalysis
-        public void Explode(float explosionStrength, int playerDamage, bool uranium)
+        public void Explode()
         {
             if (detonated) return;
             detonated = true;
@@ -221,16 +280,18 @@ namespace LegalizeNuclearBombs
                 LegalizeNuclearBombs.configCameraShakeStrength.Value
                 );
             
-            if (uranium)
-                Instantiate(uraniumCloudPrefab, center.transform.position, Quaternion.identity)
-                    .GetComponent<UraniumScript>();
+            if (spawnUraniumCloud)
+            {
+                var cloud = Instantiate(uraniumCloudPrefab, center.transform.position, Quaternion.identity)
+                    .GetComponent<NukeUraniumCloud>();
+                cloud.size = uraniumCloudSize;
+                cloud.duration = uraniumCloudDuration;
+                cloud.damage = uraniumPlayerDamage;
+                cloud.damageRate = uraniumPlayerDamageRate;
+            }
             
             if ((bool)physGrabObject) physGrabObject.impactDetector.DestroyObject();
             // explosionDelaySound.Stop();
-            
-            LegalizeNuclearBombs.Debug(
-                $"Explode (explosionStrength: {explosionStrength}, playerDamage = {playerDamage}, uranium = {uranium})",
-                this);
         }
     }
 }

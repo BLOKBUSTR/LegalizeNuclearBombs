@@ -1,9 +1,13 @@
 # Changelog
 
-### 3.1.0
+### 3.1.0 - Now with even more uranium!
 
-- Added a new config setting `IndestructibleDroneBatteryDrain`, which accelerates the rate at which the Indestructible Drone's battery will drain when attached to the Nuke. The battery drain is twice as fast by default.
-- Renamed config entry `ExplosionUraniumCloud` → `SpawnUraniumCloud`.
+- Implemented custom uranium cloud logic, plus new config options to fine-tune it to your liking, such as size, damage, duration, etc.
+- Added another new config setting `IndestructibleDroneBatteryDrain`, which accelerates the rate at which the Indestructible Drone's battery will drain when attached to the Nuke. The battery drain is twice as fast by default.
+- Changed config settings to apply shortly after instantiation of the Nuke, instead of right when it explodes.
+- Adjusted several config defaults.
+- Changed config `EnableDebug` to `DebugLogLevel`, now including "Disabled," "Enabled," and "Verbose" logging options.
+  - "Verbose" will include logs that occur very frequently within short periods of time, such as timers.
 
 ### 3.0.1
 
